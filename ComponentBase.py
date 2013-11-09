@@ -221,9 +221,9 @@ class ComponentBase(metaclass=abc.ABCMeta):
 
   def set_state(self, state):
     """ Set state as returned by get_state(). """
-    print("ComponentBase.set_state")
+    #print("ComponentBase.set_state")
     for k,v in state.items():
-      print("  Set {:14s} to {:s}".format(k,str(v)))
+      #print("  Set {:14s} to {:s}".format(k,str(v)))
       if k == "connectors":
         for con_state in v:
           self.add_connector() 
