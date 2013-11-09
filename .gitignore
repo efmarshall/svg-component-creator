@@ -1,0 +1,7 @@
+*.*~
+*.bfproject
+*.pyc
+*.spyder*
+pcb.svg
+schematic.svg
+
