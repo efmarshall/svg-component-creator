@@ -32,15 +32,15 @@ class ConnectorBase:
              DIR_S: -270}    
 
   
-  def __init__(self):
-    self.no       = -99      # Connector number
-
+  def __init__(self, no):
+    self._no      = no      # Connector number
     self.s_svg    = SW.container.Group()
     self._init_svg()
     self.p_svg    = SW.container.Group()
     self._p_elm   = None  # Will be assigned when setting p_shape
 
-    # Set default shape    
+    # Setting a shape also sets, p_dim, p_pos, p_dir etc
+    self._p_shape = None
     self.p_shape  = ConnectorBase.SHAPE_HOLE
     self.s_pin    = -99 # Connector position on schematic
     self.s_label  = "C" # Connector label
@@ -48,12 +48,17 @@ class ConnectorBase:
     self.s_after  = 0   # Space after connector
     self.s_dir    = "E" # Connector direction
     
-    
+    print("Connector created")
 #
 #  @property
 #  def p_elm(self):
 #    return self._p_elm
 #     
+
+  @property
+  def no(self):
+    return self._no
+
 
   @property
   def p_dim(self):
@@ -97,19 +102,26 @@ class ConnectorBase:
   
   @p_shape.setter
   def p_shape(self, value):
-    del self.p_svg.elements[:]
+    if self._p_shape == value:
+      return  # Shape hasn't changed
     
+    del self.p_svg.elements[:]
     if value == self.SHAPE_PAD: # Rectangular smd pad 
-      self._p_elm = self.p_svg.add(ConnSvgPad(self._p_elm))
+      self._p_elm = self.p_svg.add(ConnSvgPad(source=self._p_elm, dim=(1.6, 1.0)))
+      if self._p_shape != self.SHAPE_PAD:
+        self.p_dim  = (1.6, 1.0)  # Overwrite previous tht dimensions.
     elif value == self.SHAPE_HOLE: # Round tht hole
-      self._p_elm = self.p_svg.add(ConnSvgHole(self._p_elm))
+      self._p_elm = self.p_svg.add(ConnSvgHole(source=self._p_elm, dim=(0.9, 1.9)))
+      if self._p_shape == self.SHAPE_PAD:
+        self.p_dim = (0.9, 1.9) # Overwrite previous smd dimensions.
     elif value == self.SHAPE_RHOLE: # Rectangular tht hole
-      self._p_elm = self.p_svg.add(ConnSvgRhole(self._p_elm))
+      self._p_elm = self.p_svg.add(ConnSvgRhole(source=self._p_elm, dim=(0.9, 1.9)))
+      if self._p_shape == self.SHAPE_PAD:
+        self.p_dim = (0.9, 1.9) # Overwrite previous smd dimensions.
     else:
       raise Exception("Unsupported pcb connector shape ", str(value))    
     self._p_shape = value  
-
-
+    
 
   @property 
   def s_dir(self):
@@ -237,8 +249,11 @@ class ConnectorBase:
   def set_state(self, state):
     """ Set state as returned by get_state(). """
     #print("ConnectorBase.set_state")   
+    print("Set state for conn ", self.no)
     for k,v in state.items():
-      #print("  Set {:10s} to {:s}".format(k,str(v)))
+      if k == "no":
+        continue  # Attribute no is read only. Set at object creatinitiation.
+      print("  Set {:10s} to {:s}".format(k,str(v)))
       setattr(self, k, v)
 
 
@@ -284,19 +299,35 @@ class _TransformMatrix:
 
     
   
-class ConnSvgBase:
-  def __init__(self, source=None):
+class ConnSvgBase:  
+#  def __init__(self, source=None):
+  def __init__(self, source=None, dim=None):
     """ 
     Base class for svg connector element. 
-    Copies attributes from instance source of ConnSvgBase if present.
+    Optional argumen dim can sets dimensions.
+    If source is given and instance of ConnSvgBase, copies attributes from that
+    instance. 
+    If source is not given and dim is a 2 element tuple, use it to set the 
+    dimensions.
     """
     self._num = 0
-    self._dim = (0, 0)
     self._pos = (0, 0)  # Translate (dx, dy)
     self._rot = "E"     # Rotate rot
+    self._dim = (1, 2)  # Dimension
     
-    if isinstance(source, ConnSvgBase):
+    if self == source:
+      pass
+    elif isinstance(source, ConnSvgBase):
+      #print("Copy source")
       self.copy_from(source)
+#    else:
+#      assert isinstance(dim, tuple)
+#      assert len(dim) == 2
+#      #print("Copy dim")
+#      self.dim = dim
+    elif isinstance(dim, tuple) and len(dim) == 2:
+      #print("Copy dim")
+      self.dim = dim
 
 
   def copy_from(self, source):
@@ -305,6 +336,7 @@ class ConnSvgBase:
     self.num = source.num
     self.pos = source.pos
     self.rot = source.rot
+    self.dim = source.dim
     
 
   @property
@@ -314,6 +346,7 @@ class ConnSvgBase:
   @dim.setter
   def dim(self, value):
     assert isinstance(value, tuple)
+    print("**change dim: ", str(value))
     self._dim = value
     self._update_dim()
 
@@ -383,7 +416,6 @@ class ConnSvgHole(ConnSvgBase, SW.shapes.Circle):
   def __init__(self, *args, **kwargs):
     SW.shapes.Circle.__init__(self)
     ConnSvgBase.__init__(self, *args, **kwargs)
-    self.dim = (0.9, 1.9)
 
   
   def _update_dim(self):
@@ -404,10 +436,9 @@ class ConnSvgHole(ConnSvgBase, SW.shapes.Circle):
 class ConnSvgRhole(ConnSvgBase, SW.container.Group):
   def __init__(self, *args, **kwargs):
     SW.container.Group.__init__(self)
-    ConnSvgBase.__init__(self, *args, **kwargs)
     self.add(SW.shapes.Rect())
     self.add(SW.shapes.Circle())
-    self.dim = (0.9, 1.9)
+    ConnSvgBase.__init__(self, *args, **kwargs)
     
     
   def _update_dim(self):
@@ -436,7 +467,6 @@ class ConnSvgPad(ConnSvgBase, SW.shapes.Rect):
   def __init__(self, *args, **kwargs):
     SW.shapes.Rect.__init__(self)
     ConnSvgBase.__init__(self, *args, **kwargs)
-    self.dim = (1.6, 1.0)
   
   
   def _update_dim(self):

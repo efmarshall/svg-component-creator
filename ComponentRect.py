@@ -223,7 +223,9 @@ class ComponentRect(Cmp):
     #print("ComponentRect.get_state")
     state = super().get_state()
     state.update({"s_add_height"  : self.s_add_height,
-                  "s_add_width"   : self.s_add_width } )
+                  "s_add_width"   : self.s_add_width,
+                  "p_spacing_h"   : self.p_spacing_h,
+                  "p_spacing_v"   : self.p_spacing_v} )
     return state
     
     
