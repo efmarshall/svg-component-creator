@@ -12,8 +12,6 @@ from ComponentBase import ComponentBase as Cmp
 
 
 class ConnectorListModel(QAbstractTableModel):
-  #  schematic_col_map = {0:"s_pin", 1:"s_lbl", 2:"s_dir", 3:"s_before", 4:"s_after"}
-  #  pcb_col_map       = {0:"p_pin", 1:"s_lbl", 2:"p_dir", 3:"p_shape",  4:"p_dx", 5:"p_dy", 6:"p_dim1", 7:"p_dim2"}
   schematic_col_map = {0:"s_label", 1:"s_dir", 2:"s_before", 3:"s_after"}
   pcb_col_map       = {0:"s_label", 1:"p_dir", 2:"p_shape",  3:"p_dx", 4:"p_dy", 5:"p_dim1", 6:"p_dim2"}
   
@@ -88,15 +86,13 @@ class ConnectorListModel(QAbstractTableModel):
     conn  = self.cmp.connectors[r]
     
     if c=="p_dim1":
-      return float(conn.p_elm.dim[0])
+      return float(conn.p_dim[0])
     elif c=="p_dim2":
-      return float(conn.p_elm.dim[1])      
+      return float(conn.p_dim[1])      
     elif c=="p_dx":
-      return float(conn.p_elm.pos[0])      
+      return float(conn.p_pos[0])      
     elif c=="p_dy" :
-      return float(conn.p_elm.pos[1])      
-    elif c=="p_dir" :
-      return conn.p_elm.rot
+      return float(conn.p_pos[1])      
 
     else:
       return getattr(conn, c)
@@ -124,20 +120,19 @@ class ConnectorListModel(QAbstractTableModel):
     c   = self._col_map[index.column()]
     con = self.cmp.connectors[r]
     if c == "p_dim1":
-      con.p_elm.dim = (val, con.p_elm.dim[1])
+      con.p_dim = (val, con.p_dim[1])
     elif c == "p_dim2":
-      con.p_elm.dim = (con.p_elm.dim[0], val)
+      con.p_dim = (con.p_dim[0], val)
     elif c == "p_dx":
-      con.p_elm.pos = (val, con.p_elm.pos[1])
+      con.p_pos = (val, con.p_pos[1])
     elif c == "p_dy":
-      con.p_elm.pos = (con.p_elm.pos[0], val)
-    elif c == "p_dir":
-      con.p_elm.rot = val
-    elif c == "s_dir":
-      con.s_dir = val
-      self.cmp.body_resize()
+      con.p_pos = (con.p_pos[0], val)
     else:
       setattr(con, c, val)
+
+    if c in ("s_dir", "s_after", "s_before"):
+      self.cmp.body_resize()
+
 
     index_last = self.index(r,self.columnCount()-1)
     self.dataChanged.emit(index, index_last)

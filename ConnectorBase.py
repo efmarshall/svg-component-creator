@@ -38,7 +38,7 @@ class ConnectorBase:
     self.s_svg    = SW.container.Group()
     self._init_svg()
     self.p_svg    = SW.container.Group()
-    self._p_elm   = None
+    self._p_elm   = None  # Will be assigned when setting p_shape
 
     # Set default shape    
     self.p_shape  = ConnectorBase.SHAPE_HOLE
@@ -49,13 +49,30 @@ class ConnectorBase:
     self.s_dir    = "E" # Connector direction
     
     
+#
+#  @property
+#  def p_elm(self):
+#    return self._p_elm
+#     
 
   @property
-  def p_elm(self):
-    return self._p_elm
-     
+  def p_dim(self):
+    return self._p_elm.dim
 
+  @p_dim.setter
+  def p_dim(self, value):
+    self._p_elm.dim = value
+    
+    
+  @property
+  def p_dir(self):
+    return self._p_elm.rot
 
+  @p_dir.setter
+  def p_dir(self, value):
+    self._p_elm.rot = value
+
+  
   @property
   def p_pin(self):
     return self._p_elm.num
@@ -65,7 +82,15 @@ class ConnectorBase:
     self._p_elm.num = value
 
 
-  
+  @property
+  def p_pos(self):
+    return self._p_elm.pos
+
+  @p_pos.setter
+  def p_pos(self, value):
+    self._p_elm.pos = value
+
+
   @property
   def p_shape(self):
     return self._p_shape
@@ -200,7 +225,10 @@ class ConnectorBase:
              "s_dir"    : self.s_dir,
              "s_label"  : self.s_label,
              "s_pin"    : self.s_pin,
+             "p_dim"    : self.p_dim,
+             "p_dir"    : self.p_dir,
              "p_pin"    : self.p_pin,
+             "p_pos"    : self.p_pos,
              "p_shape"  : self.p_shape
              }
     return state

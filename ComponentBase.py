@@ -109,17 +109,31 @@ class ComponentBase(metaclass=abc.ABCMeta):
         
 
   def add_connector(self):
-    """ Add a connector to the component and return it. """
+    """
+    Add a new connector to the component. 
+    Copy shape, size and mounting from last added connecor. 
+    """
+    
     c         = Con()
     c.no      = len(self.connectors)
     c.s_pin   = c.no
     c.p_pin   = c.no
     c.s_label = "C%d" % (c.no)
-    if self.mount == self.MOUNT_THT:
+    
+    if len(self.connectors)>0:
+      state       = self.connectors[-1].get_state()
+      c.s_after   = state["s_after"]
+      c.s_before  = state["s_before"]
+      c.s_dir     = state["s_dir"]
+      c.p_shape   = state["p_shape"]
+      c.p_dim     = state["p_dim"]
+      c.p_dir     = state["p_dir"]
+      c.p_pos     = state["p_pos"]
+    elif self.mount == self.MOUNT_THT:
       c.p_shape = Con.SHAPE_HOLE
     elif self.mount == self.MOUNT_SMD:
       c.p_shape = Con.SHAPE_PAD
-    
+      
     self.sch_layers["pins"].add(c.s_svg)
     self.pcb_layers["copper1"].add(c.p_svg)
     self.connectors.append(c)

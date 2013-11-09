@@ -155,10 +155,10 @@ class ComponentRect(Cmp):
              Con.DIR_W : [],
              Con.DIR_S : []}
       
-    conns[Con.DIR_E] = [c for c in self.connectors if c.p_elm.rot == Con.DIR_E]
-    conns[Con.DIR_N] = [c for c in self.connectors if c.p_elm.rot == Con.DIR_N]
-    conns[Con.DIR_W] = [c for c in self.connectors if c.p_elm.rot == Con.DIR_W]
-    conns[Con.DIR_S] = [c for c in self.connectors if c.p_elm.rot == Con.DIR_S]
+    conns[Con.DIR_E] = [c for c in self.connectors if c.p_dir == Con.DIR_E]
+    conns[Con.DIR_N] = [c for c in self.connectors if c.p_dir == Con.DIR_N]
+    conns[Con.DIR_W] = [c for c in self.connectors if c.p_dir == Con.DIR_W]
+    conns[Con.DIR_S] = [c for c in self.connectors if c.p_dir == Con.DIR_S]
 
     le = len(conns[Con.DIR_E])
     ln = len(conns[Con.DIR_N])
