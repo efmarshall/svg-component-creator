@@ -57,7 +57,7 @@ class ComponentBase(metaclass=abc.ABCMeta):
       "outline"     : self.drw_pcb.g(id="outline", transform="scale(1,-1)")
     }
 
-    
+   
   @property
   def part_name(self):
     return self._part_name
@@ -114,26 +114,26 @@ class ComponentBase(metaclass=abc.ABCMeta):
     Copy shape, size and mounting from last added connecor. 
     """
     
-    c         = Con()
-    c.no      = len(self.connectors)
-    c.s_pin   = c.no
-    c.p_pin   = c.no
-    c.s_label = "C%d" % (c.no)
+    no                = len(self.connectors)
+    state             = {}
+    state["s_pin"]    = no
+    state["p_pin"]    = no
+    state["s_label"]  = "C%d" % no
     
     if len(self.connectors)>0:
-      state       = self.connectors[-1].get_state()
-      c.s_after   = state["s_after"]
-      c.s_before  = state["s_before"]
-      c.s_dir     = state["s_dir"]
-      c.p_shape   = state["p_shape"]
-      c.p_dim     = state["p_dim"]
-      c.p_dir     = state["p_dir"]
-      c.p_pos     = state["p_pos"]
-    elif self.mount == self.MOUNT_THT:
-      c.p_shape = Con.SHAPE_HOLE
-    elif self.mount == self.MOUNT_SMD:
-      c.p_shape = Con.SHAPE_PAD
+      state             = self.connectors[-1].get_state()
+      state["s_pin"]    = no
+      state["p_pin"]    = no
+      state["s_label"]  = "C%d" % (no)
+    else:
+      if self.mount == self.MOUNT_THT:
+        state["p_shape"] = Con.SHAPE_HOLE
+      elif self.mount == self.MOUNT_SMD:
+        state["p_shape"] = Con.SHAPE_PAD
       
+    c = Con(no)
+    c.set_state(state)  
+    
     self.sch_layers["pins"].add(c.s_svg)
     self.pcb_layers["copper1"].add(c.p_svg)
     self.connectors.append(c)
@@ -145,11 +145,6 @@ class ComponentBase(metaclass=abc.ABCMeta):
     del self.pcb_layers["copper1"].elements[no]
     del self.sch_layers["pins"].elements[no]
     del self.connectors[n]
-
-    
-#  def silkscreen(self):
-#    """ Return the silkscreen svg path element """
-#    return self.pcb_layers["silkscreen"]
 
 
   def set_silkscreen_segment(self, command, i=-1):
